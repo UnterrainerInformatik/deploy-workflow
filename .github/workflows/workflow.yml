@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Init Runner ⚙️
-        uses: UnterrainerInformatik/init-runner-action@v1
+        uses: UnterrainerInformatik/init-runner-action@master
 
       - name: Install OpenVPN 🛜
         if: ${{ inputs.ovpn_enabled }}
