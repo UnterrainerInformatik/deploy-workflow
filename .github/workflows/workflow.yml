@@ -29,6 +29,12 @@ on:
         required: true
       DOCKER_IMAGE_NAME:
         required: true
+      VPN_OVPN_FILE:
+        required: false
+      VPN_USERNAME:
+        required: false
+      VPN_PASSWORD:
+        required: false
 
 jobs:
   deploy:
@@ -38,6 +44,25 @@ jobs:
     steps:
       - name: Init Runner ⚙️
         uses: UnterrainerInformatik/init-runner-action@v1
+
+      - name: Install OpenVPN (if VPN is needed) 🛜
+        if: ${{ secrets.VPN_OVPN_FILE != '' }}
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+
+      - name: Write OVPN config
+        if: ${{ secrets.VPN_OVPN_FILE != '' }}
+        run: |
+          echo "${{ secrets.VPN_OVPN_FILE }}" >> client.ovpn
+
+      - name: Connect to VPN 🔓
+        if: ${{ secrets.VPN_OVPN_FILE != '' && secrets.VPN_USERNAME != '' && secrets.VPN_PASSWORD != '' }}
+        uses: kota65535/github-openvpn-connect-action@v3
+        with:
+          config_file: client.ovpn
+          username: ${{ secrets.VPN_USERNAME }}
+          password: ${{ secrets.VPN_PASSWORD }}
 
       - name: Installing SSH key 🔑
         uses: UnterrainerInformatik/setup-ssh-action@v1
@@ -60,10 +85,10 @@ jobs:
           host: ${{ secrets.DEPLOY_SERVER }}
           port: ${{ secrets.DEPLOY_SSH_PORT }}
 
-      - name: Touch version.js file for deployment
+      - name: Touch version.js file
         run: touch ./deploy/version.js
 
-      - name: Fill version.js file for deployment
+      - name: Fill version.js file
         env:
           MAJOR_VERSION: ${{ inputs.major_version }}
           MINOR_VERSION: ${{ inputs.minor_version }}
@@ -80,10 +105,10 @@ jobs:
           })()
           EOF
 
-      - name: Touch .env file for deployment
+      - name: Touch .env file
         run: touch ./deploy/.env
 
-      - name: Fill .env file for deployment
+      - name: Fill .env file
         run: |
           echo VERSION=${{ inputs.major_version }}.${{ inputs.minor_version }}.${{ inputs.build_version }} >> ./deploy/.env
           echo MAJOR_VERSION=${{ inputs.major_version }} >> ./deploy/.env
