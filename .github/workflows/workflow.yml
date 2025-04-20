@@ -12,6 +12,10 @@ on:
       build_version:
         required: true
         type: string
+      ovpn_enabled:
+        required: false
+        type: boolean
+        default: false
     secrets:
       DEPLOY_SSH_PRIVATE_KEY:
         required: true
@@ -45,19 +49,19 @@ jobs:
       - name: Init Runner ⚙️
         uses: UnterrainerInformatik/init-runner-action@v1
 
-      - name: Install OpenVPN (if VPN is needed) 🛜
-        if: ${{ secrets.VPN_OVPN_FILE != '' }}
+      - name: Install OpenVPN 🛜
+        if: ${{ inputs.ovpn_enabled }}
         run: |
           sudo apt update
           sudo apt install -y openvpn openvpn-systemd-resolved
 
       - name: Write OVPN config
-        if: ${{ secrets.VPN_OVPN_FILE != '' }}
+        if: ${{ inputs.ovpn_enabled }}
         run: |
           echo "${{ secrets.VPN_OVPN_FILE }}" >> client.ovpn
 
       - name: Connect to VPN 🔓
-        if: ${{ secrets.VPN_OVPN_FILE != '' && secrets.VPN_USERNAME != '' && secrets.VPN_PASSWORD != '' }}
+        if: ${{ inputs.ovpn_enabled }}
         uses: kota65535/github-openvpn-connect-action@v3
         with:
           config_file: client.ovpn
