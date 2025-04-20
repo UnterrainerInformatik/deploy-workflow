@@ -69,12 +69,12 @@ jobs:
           password: ${{ secrets.VPN_PASSWORD }}
 
       - name: Installing SSH key 🔑
-        uses: UnterrainerInformatik/setup-ssh-action@v1
+        uses: UnterrainerInformatik/setup-ssh-action@master
         with:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
 
       - name: Create deploy directory 🚧
-        uses: UnterrainerInformatik/ssh-mkdir-action@v1
+        uses: UnterrainerInformatik/ssh-mkdir-action@master
         with:
           dir: ${{ secrets.DEPLOY_DIR }}
           user: ${{ secrets.DEPLOY_SSH_USER }}
@@ -82,7 +82,7 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
 
       - name: Create data directory 🚧
-        uses: UnterrainerInformatik/ssh-mkdir-action@v1
+        uses: UnterrainerInformatik/ssh-mkdir-action@master
         with:
           dir: ${{ secrets.DATA_DIR }}
           user: ${{ secrets.DEPLOY_SSH_USER }}
@@ -122,7 +122,7 @@ jobs:
           echo DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }} >> ./deploy/.env
 
       - name: Deploy using SSH 🚛
-        uses: UnterrainerInformatik/ssh-deploy-action@v1
+        uses: UnterrainerInformatik/ssh-deploy-action@master
         with:
           source: ./deploy/
           target: ${{ secrets.DEPLOY_DIR }}
@@ -133,7 +133,7 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
 
       - name: Run using SSH 🏃
-        uses: UnterrainerInformatik/ssh-run-action@v1
+        uses: UnterrainerInformatik/ssh-run-action@master
         with:
           dir: ${{ secrets.DEPLOY_DIR }}
           file: up.sh
