@@ -16,10 +16,6 @@ on:
         required: false
         type: boolean
         default: false
-      self_hosted:
-        required: false
-        type: boolean
-        default: false
     secrets:
       DEPLOY_SSH_PRIVATE_KEY:
         required: true
@@ -52,8 +48,6 @@ jobs:
     steps:
       - name: Init Runner ⚙️
         uses: UnterrainerInformatik/init-runner-action@master
-        with:
-          self_hosted: ${{ inputs.self_hosted }}
 
       - name: Install OpenVPN 🛜
         if: ${{ inputs.ovpn_enabled }}
