@@ -92,22 +92,26 @@ jobs:
       - name: Touch version.js file
         run: touch ./deploy/version.js
 
-      - name: Fill version.js file
+      - name: 📁 Write version.js to all deploy* directories
         env:
           MAJOR_VERSION: ${{ inputs.major_version }}
           MINOR_VERSION: ${{ inputs.minor_version }}
           BUILD_VERSION: ${{ inputs.build_version }}
         run: |
-          cat <<EOF > ./deploy/version.js
-          window.version = (() => {
-            return {
-              VERSION: '${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_VERSION}',
-              MAJOR_VERSION: '${MAJOR_VERSION}',
-              MINOR_VERSION: '${MINOR_VERSION}',
-              BUILD_VERSION: '${BUILD_VERSION}'
-            }
-          })()
-          EOF
+          for dir in $(find . -maxdepth 1 -type d -name "deploy*"); do
+            echo "Writing version.js to $dir"
+            mkdir -p "$dir"
+            cat <<EOF > "$dir/version.js"
+            window.version = (() => {
+              return {
+                VERSION: '${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_VERSION}',
+                MAJOR_VERSION: '${MAJOR_VERSION}',
+                MINOR_VERSION: '${MINOR_VERSION}',
+                BUILD_VERSION: '${BUILD_VERSION}'
+              }
+            })()
+            EOF
+          done
 
       - name: Touch .env file
         run: touch ./deploy/.env
