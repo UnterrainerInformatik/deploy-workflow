@@ -92,23 +92,6 @@ jobs:
       - name: Touch version.js file
         run: touch ./deploy/version.js
 
-      - name: Fill version.js file
-        env:
-          MAJOR_VERSION: ${{ inputs.major_version }}
-          MINOR_VERSION: ${{ inputs.minor_version }}
-          BUILD_VERSION: ${{ inputs.build_version }}
-        run: |
-          cat <<EOF > ./deploy/version.js
-          window.version = (() => {
-            return {
-              VERSION: '${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_VERSION}',
-              MAJOR_VERSION: '${MAJOR_VERSION}',
-              MINOR_VERSION: '${MINOR_VERSION}',
-              BUILD_VERSION: '${BUILD_VERSION}'
-            }
-          })()
-          EOF
-
       - name: Touch .env file
         run: touch ./deploy/.env
 
