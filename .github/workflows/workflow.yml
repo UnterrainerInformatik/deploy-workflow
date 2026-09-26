@@ -12,7 +12,8 @@ on:
       build_version:
         required: true
         type: string
-      # deprecated, ignored: WireGuard is used whenever WG_CONFIG is passed
+      # deprecated, ignored: the VPN is picked from the passed secrets
+      # (WG_CONFIG -> WireGuard, else VPN_OVPN_FILE -> OpenVPN, else none)
       ovpn_enabled:
         required: false
         type: boolean
@@ -38,7 +39,6 @@ on:
         required: true
       DOCKER_IMAGE_NAME:
         required: true
-      # deprecated, ignored: OpenVPN is no longer supported
       VPN_OVPN_FILE:
         required: false
       VPN_USERNAME:
@@ -54,10 +54,29 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
     env:
       WG_CONFIG: ${{ secrets.WG_CONFIG }}
+      VPN_OVPN_FILE: ${{ secrets.VPN_OVPN_FILE }}
 
     steps:
       - name: Init Runner ⚙️
         uses: UnterrainerInformatik/init-runner-action@master
+
+      - name: Install OpenVPN 🛜
+        if: ${{ env.WG_CONFIG == '' && env.VPN_OVPN_FILE != '' }}
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+
+      - name: Write OVPN config
+        if: ${{ env.WG_CONFIG == '' && env.VPN_OVPN_FILE != '' }}
+        run: printf '%s\n' "$VPN_OVPN_FILE" > client.ovpn
+
+      - name: Connect to OpenVPN 🔓
+        if: ${{ env.WG_CONFIG == '' && env.VPN_OVPN_FILE != '' }}
+        uses: kota65535/github-openvpn-connect-action@v3
+        with:
+          config_file: client.ovpn
+          username: ${{ secrets.VPN_USERNAME }}
+          password: ${{ secrets.VPN_PASSWORD }}
 
       - name: Install WireGuard 🛜
         if: ${{ env.WG_CONFIG != '' }}
