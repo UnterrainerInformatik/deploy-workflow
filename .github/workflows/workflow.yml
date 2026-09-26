@@ -81,7 +81,13 @@ jobs:
       - name: Install WireGuard 🛜
         if: ${{ env.WG_CONFIG != '' }}
         run: |
-          command -v wg-quick >/dev/null || (sudo apt update && sudo apt install -y wireguard-tools)
+          # wg-quick also needs ip (iproute2), which slim runner images lack
+          missing=""
+          command -v wg-quick >/dev/null || missing="$missing wireguard-tools"
+          command -v ip >/dev/null || missing="$missing iproute2"
+          if [ -n "$missing" ]; then
+            sudo apt update && sudo apt install -y --no-install-recommends $missing
+          fi
 
       - name: Connect to WireGuard 🔓
         if: ${{ env.WG_CONFIG != '' }}

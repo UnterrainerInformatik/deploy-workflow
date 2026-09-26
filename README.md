@@ -81,7 +81,7 @@ Notes for `WG_CONFIG`:
 - **Restrict `AllowedIPs` to the target network** (e.g. `AllowedIPs = 10.10.196.0/22`). Configs exported from a UniFi gateway default to `0.0.0.0/0`, which would route all runner traffic through the tunnel while the job runs.
 - `DNS = ...` lines are stripped automatically, so the runner's DNS is left unchanged. Use an IP for `DEPLOY_SERVER` or make sure the runner can resolve it.
 - **Use one WireGuard peer (key) per runner.** Two runners using the same config at the same time will disconnect each other.
-- The runner needs the WireGuard kernel module (included in current Ubuntu kernels). Containerized runners need `NET_ADMIN`.
+- The runner needs the WireGuard kernel module (included in current Ubuntu kernels). Containerized runners need `NET_ADMIN` (or run privileged). Missing `wireguard-tools` and `iproute2` (`ip`, used by `wg-quick`) are installed via apt.
 
 Example:
 
