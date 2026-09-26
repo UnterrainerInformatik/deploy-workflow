@@ -2,7 +2,7 @@
 
 Reusable GitHub Actions workflow that deploys a docker-compose based service to a server via SSH.
 
-It copies the repo's `./deploy/` folder to the target server, writes a `.env` file with version and image info, and runs `up.sh` there. Optionally it first connects to the target network via OpenVPN or WireGuard.
+It copies the repo's `./deploy/` folder to the target server, writes a `.env` file with version and image info, and runs `up.sh` there. If a WireGuard config is passed, it first connects to the target network via WireGuard.
 
 Runs on self-hosted runners (`[self-hosted, Linux, X64]`) that have `sudo` and `apt`.
 
@@ -16,7 +16,6 @@ jobs:
       major_version: ${{ needs.build.outputs.major }}
       minor_version: ${{ needs.build.outputs.minor }}
       build_version: ${{ needs.build.outputs.build }}
-      wg_enabled: true
     secrets:
       DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
       DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
@@ -40,8 +39,8 @@ The calling repo needs a `./deploy/` folder with at least an `up.sh`.
 | `major_version` | yes | | Major version, written to `.env` as `MAJOR_VERSION` |
 | `minor_version` | yes | | Minor version, written to `.env` as `MINOR_VERSION` |
 | `build_version` | yes | | Build number, written to `.env` as `BUILD_VERSION` |
-| `ovpn_enabled` | no | `false` | Connect via OpenVPN before deploying |
-| `wg_enabled` | no | `false` | Connect via WireGuard before deploying |
+| `ovpn_enabled` | no | `false` | Deprecated, ignored. OpenVPN is no longer supported |
+| `wg_enabled` | no | `false` | Deprecated, ignored. WireGuard is used whenever `WG_CONFIG` is passed |
 
 `VERSION` is set in `.env` as `<major>.<minor>.<build>`.
 
@@ -60,19 +59,13 @@ The calling repo needs a `./deploy/` folder with at least an `up.sh`.
 | `DOCKER_HUB_USER` | Docker Hub user, written to `.env` as `DOCKER_HUB_USER` |
 | `DOCKER_IMAGE_NAME` | Image name, written to `.env` as `DOCKER_IMAGE_NAME` |
 
-### OpenVPN (only with `ovpn_enabled: true`)
+### WireGuard (optional)
 
 | Secret | Description |
 |---|---|
-| `VPN_OVPN_FILE` | Full content of the client `.ovpn` file |
-| `VPN_USERNAME` | VPN user, if the server requires user/password auth |
-| `VPN_PASSWORD` | VPN password, if the server requires user/password auth |
+| `WG_CONFIG` | Full content of the WireGuard client `.conf` file. If passed (non-empty), the job connects via WireGuard before deploying; if not, it deploys via SSH directly |
 
-### WireGuard (only with `wg_enabled: true`)
-
-| Secret | Description |
-|---|---|
-| `WG_CONFIG` | Full content of the WireGuard client `.conf` file |
+`VPN_OVPN_FILE`, `VPN_USERNAME` and `VPN_PASSWORD` are still accepted so existing callers don't break, but are ignored. OpenVPN is no longer supported.
 
 The config is written to `/etc/wireguard/wg-deploy.conf` and brought up as interface `wg-deploy`. It is always torn down and deleted at the end of the job, even if the deployment fails.
 

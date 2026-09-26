@@ -12,6 +12,7 @@ on:
       build_version:
         required: true
         type: string
+      # deprecated, ignored: WireGuard is used whenever WG_CONFIG is passed
       ovpn_enabled:
         required: false
         type: boolean
@@ -37,6 +38,7 @@ on:
         required: true
       DOCKER_IMAGE_NAME:
         required: true
+      # deprecated, ignored: OpenVPN is no longer supported
       VPN_OVPN_FILE:
         required: false
       VPN_USERNAME:
@@ -50,39 +52,20 @@ jobs:
   deploy:
     name: Deployment 🚀
     runs-on: [self-hosted, Linux, X64]
+    env:
+      WG_CONFIG: ${{ secrets.WG_CONFIG }}
 
     steps:
       - name: Init Runner ⚙️
         uses: UnterrainerInformatik/init-runner-action@master
 
-      - name: Install OpenVPN 🛜
-        if: ${{ inputs.ovpn_enabled }}
-        run: |
-          sudo apt update
-          sudo apt install -y openvpn openvpn-systemd-resolved
-
-      - name: Write OVPN config
-        if: ${{ inputs.ovpn_enabled }}
-        run: |
-          echo "${{ secrets.VPN_OVPN_FILE }}" >> client.ovpn
-
-      - name: Connect to VPN 🔓
-        if: ${{ inputs.ovpn_enabled }}
-        uses: kota65535/github-openvpn-connect-action@v3
-        with:
-          config_file: client.ovpn
-          username: ${{ secrets.VPN_USERNAME }}
-          password: ${{ secrets.VPN_PASSWORD }}
-
       - name: Install WireGuard 🛜
-        if: ${{ inputs.wg_enabled }}
+        if: ${{ env.WG_CONFIG != '' }}
         run: |
           command -v wg-quick >/dev/null || (sudo apt update && sudo apt install -y wireguard-tools)
 
       - name: Connect to WireGuard 🔓
-        if: ${{ inputs.wg_enabled }}
-        env:
-          WG_CONFIG: ${{ secrets.WG_CONFIG }}
+        if: ${{ env.WG_CONFIG != '' }}
         run: |
           # self-hosted runner: tear down leftovers from a previous (aborted) run
           sudo wg-quick down wg-deploy 2>/dev/null || true
@@ -148,7 +131,7 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
 
       - name: Disconnect WireGuard 🔒
-        if: ${{ always() && inputs.wg_enabled }}
+        if: ${{ always() && env.WG_CONFIG != '' }}
         run: |
           sudo wg-quick down wg-deploy || true
           sudo rm -f /etc/wireguard/wg-deploy.conf
