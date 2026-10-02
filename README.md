@@ -2,7 +2,7 @@
 
 Reusable GitHub Actions workflow that deploys a docker-compose based service to a server via SSH.
 
-It copies the repo's `./deploy/` folder to the target server, writes a `.env` file with version and image info, and runs `up.sh` there. If VPN credentials are passed, it first connects to the target network: via WireGuard if `WG_CONFIG` is passed, otherwise via OpenVPN if `VPN_OVPN_FILE` is passed. Without either it deploys via SSH directly.
+It copies the repo's `./deploy/` folder to the target server, writes a `.env` file with version and image info, and runs `up.sh` there. If `WG_CONFIG` is passed, it first connects to the target network via WireGuard; otherwise it deploys via SSH directly.
 
 Runs on self-hosted runners (`[self-hosted, Linux, X64]`) that have `sudo` and `apt`.
 
@@ -64,15 +64,11 @@ The calling repo needs a `./deploy/` folder with at least an `up.sh`.
 The VPN is picked automatically from the secrets that are passed (non-empty):
 
 1. `WG_CONFIG` → WireGuard
-2. otherwise `VPN_OVPN_FILE` → OpenVPN
-3. otherwise no VPN, SSH goes directly to `DEPLOY_SERVER`
+2. otherwise no VPN, SSH goes directly to `DEPLOY_SERVER`
 
 | Secret | Description |
 |---|---|
 | `WG_CONFIG` | Full content of the WireGuard client `.conf` file |
-| `VPN_OVPN_FILE` | Full content of the OpenVPN client `.ovpn` file (ignored if `WG_CONFIG` is passed) |
-| `VPN_USERNAME` | OpenVPN user, if the server requires user/password auth |
-| `VPN_PASSWORD` | OpenVPN password, if the server requires user/password auth |
 
 The config is written to `/etc/wireguard/wg-deploy.conf` and brought up as interface `wg-deploy`. It is always torn down and deleted at the end of the job, even if the deployment fails.
 
