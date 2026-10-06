@@ -46,6 +46,9 @@ on:
         required: true
       WG_CONFIG:
         required: false
+      # optional extra lines for deploy/.env (NAME=value, one per line), e.g. runtime secrets of the app
+      EXTRA_ENV:
+        required: false
 
 jobs:
   deploy:
@@ -114,6 +117,16 @@ jobs:
           echo BUILD_VERSION=${{ inputs.build_version }} >> ./deploy/.env
           echo DOCKER_HUB_USER=${{ secrets.DOCKER_HUB_USER }} >> ./deploy/.env
           echo DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }} >> ./deploy/.env
+
+      - name: Append extra .env entries
+        env:
+          EXTRA_ENV: ${{ secrets.EXTRA_ENV }}
+        run: |
+          if [ -n "$EXTRA_ENV" ]; then
+            printf '%s\n' "$EXTRA_ENV" >> ./deploy/.env
+            # log only the variable names, never the values
+            printf '%s\n' "$EXTRA_ENV" | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/appended \1/p'
+          fi
 
       - name: Deploy using SSH 🚛
         uses: UnterrainerInformatik/ssh-deploy-action@master
